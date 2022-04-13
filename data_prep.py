@@ -1,6 +1,8 @@
-import pandas as pd 
-from PIL import Image
+import pandas as pd
 import random
+
+from skimage.io import imread, imsave
+from skimage.transform import resize
 
 dfPanthera = pd.read_excel("./panthera_dataset/Liste_photos.xlsx")
 
@@ -20,20 +22,21 @@ dfPanthera.loc[dfPanthera['Panthera'].isnull(), 'Panthera'] = False
 dfPanthera['Photo'] = dfPanthera['Photo'].map(lambda id: '{:08}'.format(id))
 dfPanthera['Photo'] = dfPanthera['Photo'].astype(str)
 
+# Image resize
+nbrImg = len(dfPanthera)
+root_dir = "./panthera_dataset/img/"
+
+for i in range(nbrImg):
+    image_path = root_dir + str(dfPanthera.loc[i, 'Photo']) + '.jpg'
+    image = imread(image_path)
+    image = resize(image, (224, 224))
+    imsave('./panthera_dataset/img_224/'+ dfPanthera.loc[i, 'Photo'] + '.jpg', image)
+
+
 # Create to columns for pictures size
 
 dfPanthera = dfPanthera.assign(ImgSizeX = 0)
 dfPanthera = dfPanthera.assign(ImgSizeY = 0)
-
-nbrImg = len(dfPanthera)
-
-# Compute pictures size
-
-for i in range(nbrImg):
-    imgName = dfPanthera.loc[i, 'Photo'] + '.jpg'
-    img = Image.open('./panthera_dataset/img/' + imgName)
-    dfPanthera.loc[i, 'ImgSizeX'] = img.size[0]
-    dfPanthera.loc[i, 'ImgSizeY'] = img.size[1]
 
 # Split the dataset into train and test data
 
@@ -43,3 +46,4 @@ dfPanthera.loc[testIdx, 'Type'] = 'test'
 
 
 dfPanthera.to_csv('./panthera_dataset/list_photo_prep.csv', index=False)
+
